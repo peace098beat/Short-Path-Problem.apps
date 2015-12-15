@@ -36,8 +36,8 @@ GREEDY_RATIO = 0.5
 MAX_ITERATE = 50000
 
 # フィールドサイズ
-NUM_COL = 15 + 2  # 横
-NUM_ROW = 15 + 2  # 縦
+NUM_COL = 8 + 2  # 横
+NUM_ROW = 8 + 2  # 縦
 
 # 報酬
 GOAL_REWORD = 1
@@ -64,7 +64,12 @@ for row in range(NUM_ROW):
             FIELD[row, col] = WALL
 FIELD[START_ROW, START_COL] = AGENT
 FIELD[GOAL_ROW, GOAL_COL] = GOAL
-
+RANDOM_WALL_RATIO = 0.05
+area = NUM_ROW * NUM_COL
+for i in range(int(area * RANDOM_WALL_RATIO)):
+    row = random.randint(2, NUM_ROW - 3)
+    col = random.randint(2, NUM_COL - 3)
+    FIELD[row, col] = WALL
 
 def fieldDisplay(S):
     print '*** Field ***'
@@ -131,6 +136,7 @@ class Agent(object):
     def __init__(self, numAction=4):
         self.action_paturn = range(numAction)
         self.qlearnobj = QLearning()
+        self.lean_flg = True
         pass
 
     def displayQ(self):
@@ -160,11 +166,13 @@ class Agent(object):
 
         # print '>> Best Action,', best_action
         a = np.random.choice(best_action)
-
-        if GREEDY_RATIO < random.random():
-            return a
+        if self.lean_flg:
+            if GREEDY_RATIO < random.random():
+                return a
+            else:
+                return np.random.choice([0, 1, 2, 3])
         else:
-            return np.random.choice([0, 1, 2, 3])
+            return a
 
 
 # 環境クラス
@@ -277,6 +285,7 @@ class GameWindow(QWidget):
         self.state = State()
         self.field = FIELD
         self.S = self.state.getInitState()  # プロパティ化
+        self.lean_flg = True
 
         # 初期画面の準備
         # --------------
@@ -301,6 +310,12 @@ class GameWindow(QWidget):
         アルゴリズムの時間更新等はここで行う
         """
         self.iter_num += 1
+        # if self.iter_num< 10000:
+        #     self.lean_flg = True
+        # else:
+        #     self.lean_flg = False
+
+        self.agent.lean_flg = self.lean_flg
 
 
         # FIELD[row, col] = AGENT
@@ -331,7 +346,8 @@ class GameWindow(QWidget):
         o_next = self.state.encodeStateToO(np.copy(S_next))
 
         # 3. Agentに学習させる
-        self.agent.learn(np.copy(S), a, r, np.copy(S_next))
+        if self.lean_flg:
+            self.agent.learn(np.copy(S), a, r, np.copy(S_next))
 
         # 4. Stateの初期化判定
         if option == GOAL:
@@ -372,6 +388,8 @@ class GameWindow(QWidget):
         # x,y,dx,dy = 10,10,1000,1000
         # -- 描画文字
         label = 'Goal:%d / Iter:%d' % (self.goaled_number, self.iter_num)
+        if self.lean_flg:
+            label += '\nleaning'
         painter.setFont(QFont('Helvetica [Cronyx]', 13, QFont.Bold))
         painter.drawText(x, y, dx, dy, Qt.AlignLeft | Qt.AlignTop, unicode('%s' % label))
 
@@ -401,10 +419,10 @@ class GameWindow(QWidget):
                     if qval != 0:
                         painter.setBrush(QBrush(QColor(qval, 255 - qval, 255 - qval, 255), Qt.SolidPattern))
                         # painter.drawRect(x * dx, y * dy, dx, dy)
-                # elif self.field[x][y] == GOAL:
-                #     painter.setBrush(QBrush(Qt.red, Qt.SolidPattern))
-                # elif self.field[x][y] == AGENT:
-                #     painter.setBrush(QBrush(Qt.green, Qt.SolidPattern))
+                elif self.field[x][y] == GOAL:
+                    painter.setBrush(QBrush(Qt.red, Qt.SolidPattern))
+                elif self.field[x][y] == AGENT:
+                    painter.setBrush(QBrush(Qt.green, Qt.SolidPattern))
                 else:
                     painter.setBrush(QBrush(Qt.white, Qt.SolidPattern))
 
@@ -435,24 +453,31 @@ class GameWindow(QWidget):
         e = event.key()
 
         if e == Qt.Key_Up:
-            self.cursor_pos[1] -= 1
-            if self.cursor_pos[1] < 0:
-                self.cursor_pos[1] = 0
+            # self.cursor_pos[1] -= 1
+            # if self.cursor_pos[1] < 0:
+            #     self.cursor_pos[1] = 0
+            self.lean_flg = True
 
         elif e == Qt.Key_Down:
-            self.cursor_pos[1] += 1
-            if self.cursor_pos[1] > NUM_COL - 1:
-                self.cursor_pos[1] = NUM_COL - 1
+            # self.cursor_pos[1] += 1
+            # if self.cursor_pos[1] > NUM_COL - 1:
+            #     self.cursor_pos[1] = NUM_COL - 1
+            self.lean_flg = False
 
         elif e == Qt.Key_Left:
-            self.cursor_pos[0] -= 1
-            if self.cursor_pos[0] < 0:
-                self.cursor_pos[0] = 0
+            self.interval_time -= 20
+            if self.interval_time < 1:
+                self.interval_time = 1
+            self.timer.setInterval(self.interval_time)
+            # self.timer.setInterval(1000)
 
         elif e == Qt.Key_Right:
-            self.cursor_pos[0] += 1
-            if self.cursor_pos[0] > NUM_ROW - 1:
-                self.cursor_pos[0] = NUM_ROW - 1
+            self.interval_time += 20
+            if self.interval_time > 200:
+                self.interval_time = 200
+
+            self.timer.setInterval(self.interval_time)
+            # self.timer.setInterval(1)
 
         elif e == Qt.Key_Plus:
             self.interval_time -= 20
