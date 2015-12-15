@@ -43,7 +43,7 @@ NUM_ACTION = 4
 # 道:0 壁:1 ゴール:2 エージェント:3
 ROAD, WALL, GOAL, AGENT = 0, 1, 2, 3
 
-RANDOM_WALL_RATIO = 0.001
+RANDOM_WALL_RATIO = 0.01
 
 # デバッグプリント
 DEBUG_PRINT = True
@@ -406,8 +406,8 @@ class GameWindow(QWidget):
         dx = self.Margin
         dy = self.Margin
         # print self.field
-        for row in range(self.height):
-            for col in range(self.width):
+        for col in range(self.height):
+            for row in range(self.width):
                 x, y = row, col
                 if self.field.getField()[x][y] == WALL:
                     painter.setBrush(QBrush(Qt.black, Qt.SolidPattern))
@@ -510,7 +510,7 @@ class GameMainWindow(QMainWindow):
     設定用のコントロールUIを設置。
     """
     WIDTH = 600
-    HEIGHT = 600
+    HEIGHT =300
 
     def __init__(self):
         QMainWindow.__init__(self)
@@ -527,24 +527,24 @@ class GameMainWindow(QMainWindow):
         self.radioButton.setChecked(True)
 
         # 操作用のプッシュボタン
-        self.pushButton = QPushButton(self.centralwidget)
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton.setGeometry(QRect(30, 0, 75, 23))
+        # self.pushButton = QPushButton(self.centralwidget)
+        # self.pushButton.setObjectName("pushButton")
+        # self.pushButton.setGeometry(QRect(30, 0, 75, 23))
 
         # シミュレーション描画ウィンドウ(右上)
         self.widget1 = GameWindow(self.centralwidget, nrow=8, ncol=8)
         self.widget1.setGeometry(QRect(300, 0, 300, 300))
         self.widget1.setFixedSize(300, 300)
 
-        # シミュレーション描画ウィンドウ(左下)
-        self.widget2 = GameWindow(self.centralwidget, ncol=15, nrow=15)
-        self.widget2.setGeometry(QRect(0, 300, 300, 300))
-        self.widget2.setFixedSize(300, 300)
-
-        # シミュレーション描画ウィンドウ(右下)
-        self.widget3 = GameWindow(self.centralwidget, ncol=20, nrow=20)
-        self.widget3.setGeometry(QRect(300, 300, 300, 300))
-        self.widget3.setFixedSize(300, 300)
+        # # シミュレーション描画ウィンドウ(左下)
+        # self.widget2 = GameWindow(self.centralwidget, ncol=15, nrow=15)
+        # self.widget2.setGeometry(QRect(0, 300, 300, 300))
+        # self.widget2.setFixedSize(300, 300)
+        #
+        # # シミュレーション描画ウィンドウ(右下)
+        # self.widget3 = GameWindow(self.centralwidget, ncol=20, nrow=20)
+        # self.widget3.setGeometry(QRect(300, 300, 300, 300))
+        # self.widget3.setFixedSize(300, 300)
 
         # self.pushButton.clicked.connect(self.pushedButton)
         self.radioButton.toggled.connect(self.pushRadio)
@@ -557,6 +557,7 @@ class GameMainWindow(QMainWindow):
         # self.widget3.learn_flg = b
 
     def keyPressEvent(self, event):
+        self.widget1.keyPressEvent(event)
         e = event.key()
         if e == Qt.Key_Q:
             self.close()
