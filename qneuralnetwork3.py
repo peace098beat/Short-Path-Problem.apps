@@ -406,8 +406,8 @@ class GameWindow(QWidget):
         dx = self.Margin
         dy = self.Margin
         # print self.field
-        for col in range(self.height):
-            for row in range(self.width):
+        for row in range(self.height):
+            for col in range(self.width):
                 x, y = row, col
                 if self.field.getField()[x][y] == WALL:
                     painter.setBrush(QBrush(Qt.black, Qt.SolidPattern))
